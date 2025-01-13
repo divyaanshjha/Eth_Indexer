@@ -7,14 +7,14 @@ import (
 
 	"github.com/divyaanshjha/Eth_Indexer/config"
 	"github.com/divyaanshjha/Eth_Indexer/internal/abi"
-	"github.com/divyaanshjha/Eth_Indexer/internal/adapter"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
 )
 
 type Repository interface {
-	SaveEvent(ctx context.Context, event *internal.adapter.TransferEvent) error
+ SaveEvent(ctx context.Context, event *abi.Erc20Transfer) error
 
 }
 
@@ -39,19 +39,19 @@ func New(config *config.Config, repo Repository) *Indexer {
 func (i *Indexer) Start(ctx context.Context) error {
 	client, err := ethclient.DialContext(ctx, i.config.RPC)
 	if err != nil {
-		return fmt.Errorf("Failed to connect to rpc: %w", err)
+		return fmt.Errorf("failed to connect to rpc: %w", err)
 	}
 
 	defer client.Close()
 
 	erc20, err := abi.NewErc20(i.config.TokenAddress,client)
 	if err != nil {
-		return fmt.Errorf("Failed to create erc20 instance: %w",err)
+		return fmt.Errorf("failed to create erc20 instance: %w",err)
 	}
 
 	startBlock,err := client.BlockNumber(ctx)
 	if err != nil{
-		return fmt.Errorf("Failed to get block number : %w", err)
+		return fmt.Errorf("failed to get block number : %w", err)
 	}
 
 	ticker := time.NewTicker(10*time.Second)
@@ -87,6 +87,9 @@ func (i *Indexer) Start(ctx context.Context) error {
 
 			for iter.Next() {
 				transfer := iter.Event
+
+				
+
 
 				log.Info().Msgf("From: %+v, To: %+v, Value: %+v TxHash: %+v", transfer.From, transfer.To, transfer.Value, transfer.Raw.TxHash)
 
